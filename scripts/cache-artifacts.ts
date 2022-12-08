@@ -27,6 +27,7 @@ if (isNaN(pr)) throw new Error(`invalid ref: ${ref}`)
 console.log({artifacts})
 console.log({file: Path.cwd().join(artifacts)})
 console.log({exists: Path.cwd().join(artifacts).isFile()})
+console.log({cwd: Path.cwd()})
 const file = Path.cwd().join(artifacts).isFile() ?? panic(`invalid archive: ${artifacts}`)
 
 const s3 = new S3({

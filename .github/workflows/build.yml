@@ -203,11 +203,13 @@ jobs:
           name: ${{ matrix.platform.tag || matrix.platform.os }}
           path: artifacts.tgz
 
-      - run:
-          tea.xyz/var/pantry/scripts/cache-artifacts.ts
-            ${{github.repository}}
-            ${{github.ref}}
-            ${{matrix.platform.name}}
+      - run: |
+          pwd
+          ls
+          tea.xyz/var/pantry/scripts/cache-artifacts.ts \
+            ${{github.repository}} \
+            ${{github.ref}} \
+            ${{matrix.platform.name}} \
             artifacts.tgz
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_CACHE }}
