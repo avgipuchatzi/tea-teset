@@ -24,6 +24,9 @@ if (!repo.startsWith("teaxyz/")) throw new Error(`offical teaxyz repos only: ${r
 const pr = parseInt(ref.replace(/refs\/pull\/(\d+)\/merge/, "$1"))
 if (isNaN(pr)) throw new Error(`invalid ref: ${ref}`)
 
+console.log({artifacts})
+console.log({file: Path.cwd().join(artifacts)})
+console.log({exists: Path.cwd().join(artifacts).isFile()})
 const file = Path.cwd().join(artifacts).isFile() ?? panic(`invalid archive: ${artifacts}`)
 
 const s3 = new S3({
