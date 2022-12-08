@@ -14,10 +14,11 @@ import { S3 } from "s3"
 import { panic } from "utils"
 import Path from "path"
 
-const usage = "usage: cache-artifacts.ts {REPO} {REF} {archive}"
+const usage = "usage: cache-artifacts.ts {REPO} {REF} {destname} {file}"
 const repo = Deno.args[0] ?? panic(usage);
 const ref = Deno.args[1] ?? panic(usage);
-const artifacts = Deno.args[2] ?? panic(usage);
+const dest = Deno.args[2] ?? panic(usage);
+const artifacts = Deno.args[3] ?? panic(usage);
 
 if (!repo.startsWith("teaxyz/")) throw new Error(`offical teaxyz repos only: ${repo}`)
 const pr = parseInt(ref.replace(/refs\/pull\/(\d+)\/merge/, "$1"))
@@ -32,7 +33,7 @@ const s3 = new S3({
 })
 const bucket = s3.getBucket(Deno.env.get("AWS_S3_BUCKET")!)
 
-const key = `pull-request/${repo.split("/")[1]}/${pr}/${file.basename()}`
+const key = `pull-request/${repo.split("/")[1]}/${pr}/${dest}`
 const body = await Deno.readFile(file.string)
 
 console.log({ uploadingTo: key })

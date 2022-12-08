@@ -5,26 +5,42 @@ args:
   - deno
   - run
   - --allow-net
-  - --allow-env=GITHUB_TOKEN
+  - --allow-env
+  - --allow-write=./artifacts.tgz
   - --import-map={{ srcroot }}/import-map.json
 ---*/
 
 /// Test
 /// ./scripts/fetch-pr-artifacts.ts e582b03fe6efedde80f9569403555f4513dbec91
 
+import { S3 } from "https://deno.land/x/s3@0.5.0/mod.ts";
 import { panic, undent } from "utils/index.ts";
 
 /// Main
 /// -------------------------------------------------------------------------------
 
-const ref = Deno.args[0] ?? panic("usage: fetch-pr-artifacts.ts {SHA}")
+const usage = "usage: fetch-pr-artifacts.ts {REPO} {SHA} {platform+arch}"
+const repo = Deno.args[0] ?? panic(usage)
+const ref = Deno.args[1] ?? panic(usage)
+const flavor = Deno.args[2] ?? panic(usage)
 
-const res = await queryGraphQL<CommitQuery>(commitQuery())
+const res = await queryGraphQL<CommitQuery>(prQuery(repo))
 
 const node = res.repository?.ref?.target?.history?.edges.find(n => n.node.oid === ref)
-const prOid = node?.node.associatedPullRequests.nodes[0].commits.nodes[0].commit.oid
+const pr = node?.node.associatedPullRequests.nodes[0].number
 
-console.log({node, prOid})
+const s3 = new S3({
+  accessKeyID: Deno.env.get("AWS_ACCESS_KEY_ID")!,
+  secretKey: Deno.env.get("AWS_SECRET_ACCESS_KEY")!,
+  region: "us-east-1",
+})
+const bucket = s3.getBucket(Deno.env.get("AWS_S3_BUCKET")!)
+
+const key = `pull-request/${repo.split("/")[1]}/${pr}/${flavor}`
+const artifacts = (await bucket.getObject(key)) ?? panic("No artifacts found")
+
+const file = await Deno.open("artifacts.tgz", { create: true, write: true })
+await artifacts.body.pipeTo(file.writable)
 
 /// Functions
 /// -------------------------------------------------------------------------------
@@ -44,8 +60,6 @@ async function queryGraphQL<T>(query: string): Promise<T> {
   if (!rsp.ok) {
     console.error({ rsp, json })
     throw new Error()
-  } else {
-    console.debug(json)
   }
 
   return json.data as T ?? panic("No `data` returns from GraphQL endpoint")
@@ -75,41 +89,28 @@ type Node = {
 }
 
 type PullRequest = {
-  url: URL
-  commits: { nodes: Commit[]}
-}
-
-type Commit = {
-  url: URL
-  commit: { oid: string }
+  number: number
 }
 
 /// Queries
 /// -------------------------------------------------------------------------------
 
-function commitQuery(): string {
+function prQuery(repo: string): string {
+  const [owner, name] = repo.split("/")
   return undent`
     query {
-      repository(name: "pantry.core", owner: "teaxyz") {
+      repository(name: "${name}", owner: "${owner}") {
         ref(qualifiedName: "main") {
           target {
             ... on Commit {
-              history(first: 50) {
+              history(first: 100) {
                 edges {
                   node {
                     url
                     oid
                     associatedPullRequests(first: 1) {
                       nodes {
-                        url
-                        commits(last: 1) {
-                          nodes {
-                            url
-                            commit {
-                              oid
-                            }
-                          }
-                        }
+                        number
                       }
                     }
                   }
