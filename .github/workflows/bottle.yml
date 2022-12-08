@@ -58,7 +58,7 @@ jobs:
           name: ${{ matrix.platform.name }}-bottles
           path: ${{ steps.tea.outputs.prefix }}
 
-      - run: scripts/fetch-pr-artifacts.ts ${{ github.repository }} ${{ github.ref }} ${{ matrix.name }}
+      - run: scripts/fetch-pr-artifacts.ts ${{ github.repository }} ${{ github.ref }} ${{ matrix.platform.name }}
         if: merged == true
         working-directory: ${{ steps.tea.outputs.prefix }}
 

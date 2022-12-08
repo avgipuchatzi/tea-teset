@@ -207,7 +207,7 @@ jobs:
           tea.xyz/var/pantry/scripts/cache-artifacts.ts
             ${{github.repository}}
             ${{github.ref}}
-            ${{matrix.name}}
+            ${{matrix.platform.name}}
             artifacts.tgz
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_CACHE }}
