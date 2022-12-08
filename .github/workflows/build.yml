@@ -15,12 +15,6 @@ env:
   TEA_PANTRY_PATH: ${{ github.workspace }}/pantry
 
 jobs:
-  ref:
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo ${{ github.ref }}
-          false
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -157,6 +151,13 @@ jobs:
           fi
         if: ${{ matrix.container != '' }}
 
+      - run: |
+          # in case this PR contains updates to the scripts
+          #TODO only do for PRs
+          if test "$GITHUB_REPOSITORY" = "teaxyz/pantry.core"; then
+            cp -rv $GITHUB_WORKSPACE/pantry/scripts/* $(tea --prefix)/tea.xyz/var/pantry/scripts
+          fi
+
       - uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.tag || matrix.os }}
@@ -164,6 +165,13 @@ jobs:
       - run: tar xzf artifacts.tgz
 
       - run: tea.xyz/var/pantry/scripts/test.ts ${{ inputs.projects }}
+
+      - run: tea.xyz/var/pantry/scripts/cache-artifacts.ts ${{github.repository}} ${{github.ref}} artifacts.tgz
+        if: startsWith(github.ref, 'refs/pull/') && startsWith(github.repository, 'teaxyz/pantry.')
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_CACHE }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   bottle:
     needs: [test, build]
