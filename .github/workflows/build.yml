@@ -15,6 +15,12 @@ env:
   TEA_PANTRY_PATH: ${{ github.workspace }}/pantry
 
 jobs:
+  ref:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo ${{ github.ref }}
+          false
   build:
     runs-on: ${{ matrix.os }}
     strategy:
