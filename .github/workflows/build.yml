@@ -201,17 +201,13 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.platform.tag || matrix.platform.os }}
-          path: artifacts.tgz
 
       - run: |
-          pwd
-          ls -l
-          dirname artifacts.tgz
           tea.xyz/var/pantry/scripts/cache-artifacts.ts \
             ${{github.repository}} \
             ${{github.ref}} \
             ${{matrix.platform.name}} \
-            artifacts.tgz
+            ${{ matrix.platform.tag || matrix.platform.os }}
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_CACHE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
