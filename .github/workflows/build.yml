@@ -205,7 +205,8 @@ jobs:
 
       - run: |
           pwd
-          ls
+          ls -l
+          dirname artifacts.tgz
           tea.xyz/var/pantry/scripts/cache-artifacts.ts \
             ${{github.repository}} \
             ${{github.ref}} \
