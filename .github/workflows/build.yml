@@ -209,7 +209,7 @@ jobs:
             ${{github.repository}} \
             ${{github.ref}} \
             ${{matrix.platform.name}} \
-            ${{ matrix.platform.tag || matrix.platform.os }}
+            artifacts.tgz
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_CACHE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
